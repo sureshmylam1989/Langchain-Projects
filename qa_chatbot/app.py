@@ -1,6 +1,5 @@
 import os
 import streamlit as st
-from datetime import datetime, timedelta
 # from langchain_openai import ChatOpenAI
 from langchain_groq import ChatGroq
 from langchain_core.output_parsers import StrOutputParser
@@ -57,62 +56,17 @@ with col4:
 
 st.divider()  # Add a visual separator
 
-## Rate Limiting Configuration
-QUERIES_PER_DAY = 50  # Set your desired limit here
-
-# Initialize session state for rate limiting
-if 'query_timestamps' not in st.session_state:
-    st.session_state.query_timestamps = []
-
-def check_rate_limit():
-    """Check if user has exceeded the query limit"""
-    now = datetime.now()
-    one_day_ago = now - timedelta(days=1)
-    
-    # Remove timestamps older than 24 hours
-    st.session_state.query_timestamps = [
-        ts for ts in st.session_state.query_timestamps 
-        if ts > one_day_ago
-    ]
-    
-    # Check if limit exceeded
-    if len(st.session_state.query_timestamps) >= QUERIES_PER_DAY:
-        return False
-    return True
-
-def record_query():
-    """Record the current query timestamp"""
-    st.session_state.query_timestamps.append(datetime.now())
-
 ## Enter User Input
 st.write("Please ask any question")
-
-# Display remaining queries
-remaining_queries = QUERIES_PER_DAY - len(st.session_state.query_timestamps)
-st.caption(f"Queries remaining today: {remaining_queries}/{QUERIES_PER_DAY}")
 
 user_input = st.text_input("Enter your question")
 
 if user_input:
-    # Check rate limit before processing
-    if not check_rate_limit():
-        st.error(f"⚠️ Rate limit exceeded! You can only make {QUERIES_PER_DAY} queries per day. Please try again later.")
-        # Show when they can query again
-        oldest_timestamp = min(st.session_state.query_timestamps)
-        reset_time = oldest_timestamp + timedelta(days=1)
-        time_until_reset = reset_time - datetime.now()
-        hours_remaining = int(time_until_reset.total_seconds() / 3600)
-        minutes_remaining = int((time_until_reset.total_seconds() % 3600) / 60)
-        st.info(f"⏰ You can make queries again in {hours_remaining} hour(s) and {minutes_remaining} minute(s)")
-    # elif not api_key:
-    #     st.warning("⚠️ Please enter your OpenAI API Key in the settings above")
-    else:
-        try:
-            response = generate_response(user_input, api_key, llm, temperature, max_tokens)
-            record_query()  # Record successful query
-            st.write("Assistant: ", response)
-        except Exception as e:
-            st.error(f"❌ Error: {str(e)}")
+    try:
+        response = generate_response(user_input, api_key, llm, temperature, max_tokens)
+        st.write("Assistant: ", response)
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
 else:
     st.write("Please enter a question")
     
