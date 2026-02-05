@@ -6,6 +6,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 
+# load env
 load_dotenv()   
 
 # Set environment variables only if they exist in .env
